@@ -1,6 +1,6 @@
 {
   "name": "buckleup",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "framework for data driven tests",
   "main": "index.js",
   "directories": {
@@ -37,6 +37,8 @@
     "chai": "^4.2.0",
     "deepdown": "^1.0.0",
     "got": "^9.6.0",
-    "sigv4": "git+ssh://git@gitlab.aws.warnerbros.com:content-now/sigV4.git"
+    "sigv4": "git+ssh://git@gitlab.aws.warnerbros.com:content-now/sigV4.git",
+    "sinon": "^7.3.2",
+    "sinon-mocker": "^1.0.0"
   }
 }

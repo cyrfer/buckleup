@@ -6,6 +6,8 @@ const path = require('path');
 
 const drillDown = require('deepdown').default;
 const mocha = require('mocha');
+const sinon = require('sinon');
+const mocker = require('sinon-mocker');
 
 const clone = (data) => {
     return JSON.parse(JSON.stringify(data));
@@ -33,7 +35,8 @@ const httpCall = (task, ctx) => {
     };
     if (/POST/i.test(task.httpMethod)) {
         // TODO: can you `require('path.relative.to.app')` ?
-        req.body = JSON.stringify(require(task.body))
+        const filename = path.resolve(process.cwd(), task.body);
+        req.body = JSON.stringify(require(filename));
     }
     if (task.auth === 'AWS_IAM') {
         req = sigV4(req, ctx.config);
@@ -45,17 +48,52 @@ const httpCall = (task, ctx) => {
 }
 
 const requireCall = (task, ctx) => {
-    const requireData = require(task.requirePath);
+    const filepath = path.resolve(process.cwd(), task.requirePath);
+    const requireData = require(filepath);
     ctx[task.contextKey] = requireData;
 };
+
+const loadValue = (val) => {
+    if (val.file) {
+        const filepath = path.resolve(process.cwd(), val.file);
+        const requireData = require(filepath);
+        return requireData;
+    }
+    return val;
+}
+
+const stubCall = (task, ctx) => {
+    const mod = require(task.requirePath);
+    if (!ctx.mocks) {
+        ctx.mocks = {};
+    }
+    if (!ctx.mocks[task.className]) {
+        ctx.mocks[task.className] = {};
+    }
+    (task.methods || []).forEach(m => {
+        ctx.mocks[task.className][m.name] = sinon.stub();
+        (m.calls || [m]).forEach((c, i) => {
+            const loadedValue = loadValue(c.value);
+            const sinonCall = ctx.mocks[task.className][m.name].onCall(i);
+            c.spread ? sinonCall[c.stubMethod](...loadedValue) : sinonCall[c.stubMethod](loadedValue);
+        });
+    });
+
+    if (!ctx.stubs) {
+        ctx.stubs = {};
+    }
+    if (!ctx.stubs[task.className]) {
+        ctx.stubs[task.className] = sinon.stub(mod, task.className).callsFake(mocker.fakeCtor(ctx.mocks[task.className]));
+    }
+}
 
 const taskFactories = {
     http: httpCall,
     require: requireCall,
+    stub: stubCall,
 }
 
-exports.setup = (config, tasks) => {
-    const context = {config: config};
+exports.setup = (context, tasks) => {
     return Promise.all((tasks || []).map(task => {
         return taskFactories[task.taskType](task, context)
     }))
@@ -162,7 +200,8 @@ const testLifecycle = (app, test, testContext, testWrapper) => async () => {
     // setup preconditions for testing
     // OPTIONAL: alternatively setup `serviceStubs`
     // TODO: auth needed creds that were in `lambda.runtime`
-    const setupContext = await exports.setup(testContext, testContext.useMocks ? test.serviceStubs: test.setupCalls);
+    const useMocks = drillDown(testContext, 'config.useMocks'.split('.'));
+    const setupContext = await exports.setup(testContext, useMocks ? test.serviceStubs: test.setupCalls);
     // const [setupError, setupContext] = await exports.setup(testContext, testContext.useMocks ? test.serviceStubs: test.setupCalls);
     // assert.isNotOk(setupError, `setup error: ${JSON.stringify(setupError)}`);
 
@@ -209,7 +248,12 @@ exports.makeTests = (allTests, seedContext={}, testWrapper=exports.wrapPromise, 
         // prepare to run each test
         (allTests.tests || []).forEach((test, testIndex) => {
             describe(`test: ${testIndex}`, () => {
-                (test.only ? it.only : (test.skip ? it.skip : it))(test.name, testLifecycle(app, test, clone(seedContext), testWrapper))
+                const testContext = {config: clone(seedContext)};
+                (test.only ? it.only : (test.skip ? it.skip : it))(test.name, testLifecycle(app, test, testContext, testWrapper));
+                after(() => {
+                    testContext.mocks && mocker.resetMocks(testContext.mocks);
+                    testContext.stubs && mocker.restoreServices(testContext.stubs);
+                })
             })
         })
     });
