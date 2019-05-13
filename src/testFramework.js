@@ -131,10 +131,13 @@ exports.doCompare = (expectedData, data) => ({compareKey, parse, omitKeys, opera
     expectedData = (omitKeys || []).reduce(fnOmit, expectedData);
     data = (omitKeys || []).reduce(fnOmit, data);
 
+    const drillKeys = compareKey.split('.');
+    const resData = drillDown(data, drillKeys);
+    const expData = drillDown(expectedData, drillKeys);
     if (operator === 'match') {
-        assert[operator](data[compareKey], new RegExp(expectedData[compareKey]), `compare failed for key [${compareKey}]`);
+        assert[operator](resData, new RegExp(expData), `compare failed for key [${compareKey}]`);
     } else {
-        assert[operator](data[compareKey], expectedData[compareKey], `compare failed for key [${compareKey}]`);
+        assert[operator](resData, expData, `compare failed for key [${compareKey}]`);
     }
 }
 
@@ -161,7 +164,7 @@ const utilCallback = (resolve, reject, test) => (err, data) => {
     if (err) {
         return reject(err);
     }
-    resolve(data);
+    resolve([null, data]);
 };
 
 exports.wrapCallback = async (app, test, setupContext) => {
@@ -193,7 +196,11 @@ const loadApplicationModule = (allTests) => {
 
 const loadExpectation = (test) => {
     const expectation = test.expectedError || test.expectedOutput;
-    return (expectation && expectation.file) ? require(expectation.file) : expectation;
+    if (expectation.file) {
+        const filename = path.resolve(process.cwd(), expectation && expectation.file || '');
+        expectation.value = require(filename);
+    }
+    return expectation;
 };
 
 const testLifecycle = (app, test, testContext, testWrapper) => async () => {
