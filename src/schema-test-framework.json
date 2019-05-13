@@ -4,7 +4,6 @@
         "testTask": {
             "type": "object",
             "required": [
-                "contextKey",
                 "taskType"
             ],
             "properties": {
