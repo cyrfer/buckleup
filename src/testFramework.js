@@ -143,8 +143,9 @@ exports.wrapCallback = async (app, test, setupContext) => {
 
 const loadApplicationModule = (allTests) => {
     let mod = allTests.module;
-    if (typeof mod === 'string') {
-        mod = require(allTests.module);
+    if (typeof allTests.module === 'string') {
+        const filepath = path.resolve(process.cwd(), allTests.module);
+        mod = require(filepath);
     }
     if (mod && typeof allTests.moduleKey === 'string') {
         return mod[allTests.moduleKey];
@@ -211,5 +212,5 @@ exports.makeTests = (allTests, seedContext={}, testWrapper=exports.wrapPromise, 
                 (test.only ? it.only : (test.skip ? it.skip : it))(test.name, testLifecycle(app, test, clone(seedContext), testWrapper))
             })
         })
-    });    
+    });
 }

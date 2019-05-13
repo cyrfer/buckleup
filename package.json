@@ -1,6 +1,6 @@
 {
   "name": "buckleup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "framework for data driven tests",
   "main": "index.js",
   "directories": {
