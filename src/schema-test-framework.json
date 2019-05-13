@@ -1,0 +1,211 @@
+{
+    "type": "object",
+    "definitions": {
+        "testTask": {
+            "type": "object",
+            "required": [
+                "contextKey",
+                "taskType"
+            ],
+            "properties": {
+                "taskType": {
+                    "type": "string",
+                    "enum": [
+                        "http",
+                        "stub",
+                        "require"
+                    ]
+                },
+                "contextKey": {
+                    "type": "string"
+                },
+                "requirePath": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "auth": {
+                    "type": "string",
+                    "enum": [
+                        "AWS_IAM"
+                    ]
+                },
+                "url": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "httpMethod": {
+                    "type": "string"
+                },
+                "body": {
+                    "type": "string"
+                },
+                "module": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "method": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "anyType": {
+            "anyOf": [
+                {"type": "array"},
+                {"type": "object"},
+                {"type": "boolean"},
+                {"type": "string"},
+                {"type": "number"}
+            ]
+        },
+        "filePath": {
+            "type": "string"
+        },
+        "testAssert": {
+            "type": "object",
+            "required": [
+                "compareKey",
+                "operator"
+            ],
+            "properties": {
+                "compareKey": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "operator": {
+                    "type": "string",
+                    "enum": [
+                        "equal",
+                        "deepEqual",
+                        "match"
+                    ]
+                },
+                "parse": {
+                    "type": "boolean"
+                },
+                "omitKeys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "testResult": {
+            "type": "object",
+            "required": [],
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "value": {
+                    "$ref": "#/definitions/anyType"       
+                },
+                "asserts": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "$ref": "#/definitions/testAssert"
+                    }
+                }
+            }
+        },
+        "testInput": {
+            "type": "object",
+            "properties": {
+                "spread": {"type": "boolean"},
+                "file": {"$ref": "#/definitions/filePath"},
+                "value": {
+                    "$ref": "#/definitions/anyType"
+                }
+            }
+        },
+        "testItem": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "input": {
+                    "$ref": "#/definitions/testInput"
+                },
+                "expectedError": {
+                    "$ref": "#/definitions/testResult"
+                },
+                "expectedOutput": {
+                    "$ref": "#/definitions/testResult"
+                },
+                "serviceStubs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/testTask"
+                    }
+                },
+                "setupCalls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/testTask"
+                    }
+                },
+                "teardownCalls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/testTask"
+                    }
+                }
+            }
+        },
+        "testSet": {
+            "type": "object",
+            "required": ["module"],
+            "properties": {
+                "module": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "moduleKey": {
+                    "type": "string"
+                },
+                "tests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/testItem"
+                    }
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                       "$ref": "#/definitions/testSet"
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "module",
+        "moduleKey",
+        "tests"
+    ],
+    "properties": {
+        "module": {
+            "type": "string"
+        },
+        "moduleKey": {
+            "type": "string"
+        },
+        "tests": {
+            "type": "array",
+            "items": {
+               "$ref": "#/definitions/testItem"
+            }
+        },
+        "children": {
+            "type": "array",
+            "items": {
+               "$ref": "#/definitions/testSet"
+            }
+        }
+    }
+}

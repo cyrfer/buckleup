@@ -1,0 +1,42 @@
+{
+  "name": "buckleup",
+  "version": "0.1.0",
+  "description": "framework for data driven tests",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "nyc mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyrfer/buckleup.git"
+  },
+  "keywords": [
+    "black",
+    "box",
+    "testing",
+    "mocha",
+    "data",
+    "driven"
+  ],
+  "author": "John K. Grant <cyrfer@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cyrfer/buckleup/issues"
+  },
+  "homepage": "https://github.com/cyrfer/buckleup#readme",
+  "devDependencies": {
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1"
+  },
+  "dependencies": {
+    "ajv": "^6.10.0",
+    "ajv-cli": "^3.0.0",
+    "chai": "^4.2.0",
+    "deepdown": "^1.0.0",
+    "got": "^9.6.0",
+    "sigv4": "git+ssh://git@gitlab.aws.warnerbros.com:content-now/sigV4.git"
+  }
+}

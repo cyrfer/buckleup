@@ -1,0 +1,45 @@
+{
+    "module": "../index",
+    "moduleKey": "makeTests",
+    "tests": [
+        {
+            "name": "makeTests - missing tests",
+            "expectedError": {
+                "value": {
+                    "message": "missing tests"
+                },
+                "asserts": [
+                    {
+                        "compareKey": "message",
+                        "operator": "match"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "makeTests - bad module path",
+            "input": {
+                "spread": true,
+                "value": ["badpath.json"]
+            },
+            "expectedError": {
+                "value": {
+                    "message": "Cannot find module"
+                },
+                "asserts": [
+                    {
+                        "compareKey": "message",
+                        "operator": "match"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "makeTests - happy path",
+            "input": {
+                "spread": true,
+                "value": ["test/catfood.json"]
+            }
+        }
+    ]
+}
